@@ -32,18 +32,21 @@ builder.Services.AddControllers()
 // Configuraci�n CORS m�s espec�fica y segura
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-                ?? new[] { "http://localhost:3000", "http://localhost:5173" };
-
-            policy
-                .WithOrigins(allowedOrigins) // Especifica los or�genes permitidos
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials(); // IMPORTANTE: Permite credenciales (cookies, auth headers)
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrEmpty(origin)) return false;
+                var uri = new Uri(origin);
+                // Permite localhost en cualquier puerto y cualquier subdominio de vercel.app
+                return uri.Host == "localhost"
+                    || uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase);
+            })
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
 
