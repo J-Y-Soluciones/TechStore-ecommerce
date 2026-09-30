@@ -18,18 +18,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // ESTAS 3 CONFIGURACIONES SON CLAVE
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.MaxDepth = 64; // Aumentar profundidad m�xima
+        options.JsonSerializerOptions.MaxDepth = 64;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-
-        // Configuraciones adicionales recomendadas
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.WriteIndented = true;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    }); builder.Services.AddEndpointsApiExplorer();
+    });
 
-// Configuraci�n CORS m�s espec�fica y segura
+builder.Services.AddEndpointsApiExplorer();
+
+// Configuración CORS adaptada para Vercel y localhost
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -39,7 +38,6 @@ builder.Services.AddCors(options =>
             {
                 if (string.IsNullOrEmpty(origin)) return false;
                 var uri = new Uri(origin);
-                // Permite localhost en cualquier puerto y cualquier subdominio de vercel.app
                 return uri.Host == "localhost"
                     || uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase);
             })
@@ -49,10 +47,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 builder.Services.AddSwaggerGen(setup =>
 {
-    // Configurar el esquema de seguridad (Bot�n Authorize)
     setup.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -60,7 +56,7 @@ builder.Services.AddSwaggerGen(setup =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingrese su token JWT aqu�. Ejemplo: eyJhbGciOiJIUz..."
+        Description = "Ingrese su token JWT aquí. Ejemplo: eyJhbGciOiJIUz..."
     });
 
     setup.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -78,16 +74,23 @@ builder.Services.AddSwaggerGen(setup =>
         }
     });
 });
-// Configure database context
-var dbServer = Environment.GetEnvironmentVariable("DB_SERVER") ?? "localhost";
-var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
-var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
 
-// Construimos la cadena completa din�micamente usando DB_SERVER
-var connectionString = $"Server={dbServer};Database=TechStoreDB;User={dbUser};Password={dbPassword};";
+// Obtener la cadena de conexión desde appsettings o variables de entorno
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["ConnectionStrings__DefaultConnection"]
+    ?? builder.Configuration["DefaultConnection"];
+
+// Versión fija compatible con TiDB / MySQL 8.0 sin AutoDetect síncrono
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, serverVersion, mySqlOptions =>
+    {
+        mySqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+    }));
 
 // Register application services
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -95,8 +98,9 @@ builder.Services.AddScoped<IProductRepository, TechStore.Infrastructure.Reposito
 builder.Services.AddScoped<TechStore.Domain.Interfaces.IClientRepository, TechStore.Infrastructure.Repositories.ClientRepository>();
 builder.Services.AddScoped<TechStore.Domain.Interfaces.ISaleRepository, TechStore.Infrastructure.Repositories.SaleRepository>();
 
-var jwtKey = builder.Configuration["Jwt:Key"];
-var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? "EstaEsMiClaveSecretaSuperSeguraParaElProyectoTechStore2025!";
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(config =>
 {
@@ -115,26 +119,25 @@ builder.Services.AddAuthentication(config =>
     };
 });
 
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Habilitar Swagger siempre para el portafolio
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TechStore API v1");
+    c.RoutePrefix = "swagger";
+});
 
+// Middleware ordenado correctamente
 app.UseCors("AllowFrontend");
 
-app.UseHttpsRedirection();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
 
+// Poblar la base de datos de TiDB al arrancar si está vacía
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
