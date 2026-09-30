@@ -20,7 +20,7 @@ El backend ha sido desarrollado siguiendo los principios de la **Arquitectura He
 - **Tailwind CSS** (Estilos rápidos y responsivos)
 
 ### Backend
-- **ASP.NET Core 9.0**
+- **ASP.NET Core 8.0**
 - **Entity Framework Core**
 - **MySQL** (Base de datos principal)
 - **JWT (JSON Web Tokens)** para autenticación segura.
@@ -32,7 +32,7 @@ El backend ha sido desarrollado siguiendo los principios de la **Arquitectura He
 ## ⚙️ Configuración del Proyecto
 
 ### Requisitos Previos
-- [.NET SDK 9.0+](https://dotnet.microsoft.com/download)
+- [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
 - [Node.js & npm](https://nodejs.org/)
 - Servidor MySQL activo.
 
