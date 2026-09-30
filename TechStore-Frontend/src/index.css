@@ -1,3 +1,33 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities; 
+/* Estilos estructurales para el Modal Dark SaaS */
+.dark-saas-modal .ant-modal-content {
+  background-color: #090d16 !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid #1e293b !important;
+  padding: 1.75rem 2rem 2rem 2rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+}
+
+.dark-saas-modal .ant-modal-header {
+  background-color: transparent !important;
+  border-bottom: 1px solid #1e293b !important;
+  padding-bottom: 1rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.dark-saas-modal .ant-modal-body {
+  background-color: transparent !important;
+  padding: 0 !important;
+  color: #f8fafc !important;
+}
+
+/* Posición y color de la X para evitar que quede encimada */
+.dark-saas-modal .ant-modal-close {
+  top: 1.5rem !important;
+  right: 1.75rem !important;
+  color: #94a3b8 !important;
+}
+
+.dark-saas-modal .ant-modal-close:hover {
+  color: #f8fafc !important;
+  background-color: #1e293b !important;
+}

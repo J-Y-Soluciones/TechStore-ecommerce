@@ -1,27 +1,26 @@
-import React, { useEffect } from 'react'
-import { Modal, Form, Input, Button } from 'antd'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Client, CreateClient, UpdateClient } from '@/types/api.types'
+import React, { useEffect } from "react";
+import { Modal, Form, Input } from "antd";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Client, CreateClient, UpdateClient } from "@/types/api.types";
 
-// Esquema de validación
 const clientSchema = z.object({
-  nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
-  dniRuc: z.string().min(8, 'El DNI/RUC debe tener al menos 8 caracteres'),
-  direccion: z.string().min(5, 'La dirección es requerida'),
-  telefono: z.string().min(9, 'El teléfono debe tener al menos 9 caracteres'),
-  email: z.string().email('Email inválido'),
-})
+  nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  dniRuc: z.string().min(8, "El DNI/RUC debe tener al menos 8 caracteres"),
+  direccion: z.string().min(5, "La dirección es requerida"),
+  telefono: z.string().min(9, "El teléfono debe tener al menos 9 caracteres"),
+  email: z.string().email("Email inválido"),
+});
 
-type ClientFormData = z.infer<typeof clientSchema>
+type ClientFormData = z.infer<typeof clientSchema>;
 
 interface ClientFormProps {
-  open: boolean
-  onClose: () => void
-  client?: Client
-  onSubmit: (data: CreateClient | UpdateClient) => Promise<void>
-  isSubmitting: boolean
+  open: boolean;
+  onClose: () => void;
+  client?: Client;
+  onSubmit: (data: CreateClient | UpdateClient) => Promise<void>;
+  isSubmitting: boolean;
 }
 
 const ClientForm: React.FC<ClientFormProps> = ({
@@ -31,7 +30,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
   onSubmit,
   isSubmitting,
 }) => {
-  const isEditing = !!client
+  const isEditing = !!client;
 
   const {
     control,
@@ -41,13 +40,13 @@ const ClientForm: React.FC<ClientFormProps> = ({
   } = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      nombre: '',
-      dniRuc: '',
-      direccion: '',
-      telefono: '',
-      email: '',
+      nombre: "",
+      dniRuc: "",
+      direccion: "",
+      telefono: "",
+      email: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (open) {
@@ -58,46 +57,51 @@ const ClientForm: React.FC<ClientFormProps> = ({
           direccion: client.direccion,
           telefono: client.telefono,
           email: client.email,
-        })
+        });
       } else {
         reset({
-          nombre: '',
-          dniRuc: '',
-          direccion: '',
-          telefono: '',
-          email: '',
-        })
+          nombre: "",
+          dniRuc: "",
+          direccion: "",
+          telefono: "",
+          email: "",
+        });
       }
     }
-  }, [open, client, reset])
+  }, [open, client, reset]);
 
   const handleClose = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   const handleFormSubmit = async (data: ClientFormData) => {
     try {
       if (isEditing && client) {
-        await onSubmit({ id: client.id, ...data } as UpdateClient)
+        await onSubmit({ id: client.id, ...data } as UpdateClient);
       } else {
-        await onSubmit(data as CreateClient)
+        await onSubmit(data as CreateClient);
       }
-      reset()
-      onClose()
+      reset();
+      onClose();
     } catch (error) {
-      console.error('Error submitting form:', error)
+      console.error("Error submitting form:", error);
     }
-  }
+  };
 
   return (
     <Modal
-      title={isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
+      title={
+        <span className="text-white font-bold">
+          {isEditing ? "Editar Cliente" : "Nuevo Cliente"}
+        </span>
+      }
       open={open}
       onCancel={handleClose}
       footer={null}
       width={600}
       destroyOnClose
+      className="[&_.ant-modal-content]:!bg-[#0f172a] [&_.ant-modal-content]:!border [&_.ant-modal-content]:!border-slate-800 [&_.ant-modal-header]:!bg-transparent"
     >
       <Form
         layout="vertical"
@@ -106,8 +110,12 @@ const ClientForm: React.FC<ClientFormProps> = ({
       >
         <div className="grid grid-cols-2 gap-4">
           <Form.Item
-            label="Nombre Completo"
-            validateStatus={errors.nombre ? 'error' : ''}
+            label={
+              <span className="text-xs font-semibold text-slate-400">
+                Nombre Completo
+              </span>
+            }
+            validateStatus={errors.nombre ? "error" : ""}
             help={errors.nombre?.message}
             required
           >
@@ -119,14 +127,19 @@ const ClientForm: React.FC<ClientFormProps> = ({
                   {...field}
                   placeholder="Ej: Juan Pérez"
                   size="middle"
+                  className="!bg-slate-900 !border-slate-700/80 !text-slate-100 placeholder:!text-slate-500 rounded-lg"
                 />
               )}
             />
           </Form.Item>
 
           <Form.Item
-            label="DNI/RUC"
-            validateStatus={errors.dniRuc ? 'error' : ''}
+            label={
+              <span className="text-xs font-semibold text-slate-400">
+                DNI / RUC
+              </span>
+            }
+            validateStatus={errors.dniRuc ? "error" : ""}
             help={errors.dniRuc?.message}
             required
           >
@@ -138,6 +151,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
                   {...field}
                   placeholder="Ej: 12345678"
                   size="middle"
+                  className="!bg-slate-900 !border-slate-700/80 !text-slate-100 placeholder:!text-slate-500 rounded-lg"
                 />
               )}
             />
@@ -145,8 +159,12 @@ const ClientForm: React.FC<ClientFormProps> = ({
         </div>
 
         <Form.Item
-          label="Email"
-          validateStatus={errors.email ? 'error' : ''}
+          label={
+            <span className="text-xs font-semibold text-slate-400">
+              Correo Electrónico
+            </span>
+          }
+          validateStatus={errors.email ? "error" : ""}
           help={errors.email?.message}
           required
         >
@@ -159,6 +177,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
                 placeholder="Ej: cliente@email.com"
                 size="middle"
                 type="email"
+                className="!bg-slate-900 !border-slate-700/80 !text-slate-100 placeholder:!text-slate-500 rounded-lg"
               />
             )}
           />
@@ -166,8 +185,12 @@ const ClientForm: React.FC<ClientFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <Form.Item
-            label="Teléfono"
-            validateStatus={errors.telefono ? 'error' : ''}
+            label={
+              <span className="text-xs font-semibold text-slate-400">
+                Teléfono
+              </span>
+            }
+            validateStatus={errors.telefono ? "error" : ""}
             help={errors.telefono?.message}
             required
           >
@@ -179,14 +202,19 @@ const ClientForm: React.FC<ClientFormProps> = ({
                   {...field}
                   placeholder="Ej: 987654321"
                   size="middle"
+                  className="!bg-slate-900 !border-slate-700/80 !text-slate-100 placeholder:!text-slate-500 rounded-lg"
                 />
               )}
             />
           </Form.Item>
 
           <Form.Item
-            label="Dirección"
-            validateStatus={errors.direccion ? 'error' : ''}
+            label={
+              <span className="text-xs font-semibold text-slate-400">
+                Dirección
+              </span>
+            }
+            validateStatus={errors.direccion ? "error" : ""}
             help={errors.direccion?.message}
             required
           >
@@ -198,31 +226,32 @@ const ClientForm: React.FC<ClientFormProps> = ({
                   {...field}
                   placeholder="Ej: Av. Principal 123"
                   size="middle"
+                  className="!bg-slate-900 !border-slate-700/80 !text-slate-100 placeholder:!text-slate-500 rounded-lg"
                 />
               )}
             />
           </Form.Item>
         </div>
 
-        <Form.Item className="mb-0">
-          <div className="flex justify-end space-x-2">
-            <Button onClick={handleClose} size="middle">
-              Cancelar
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="middle"
-              loading={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isEditing ? 'Actualizar' : 'Crear'}
-            </Button>
-          </div>
-        </Form.Item>
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-800">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs tracking-wide shadow-[0_0_15px_rgba(6,182,212,0.3)] transition cursor-pointer disabled:opacity-50"
+          >
+            {isSubmitting ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
+          </button>
+        </div>
       </Form>
     </Modal>
-  )
-}
+  );
+};
 
-export default ClientForm
+export default ClientForm;

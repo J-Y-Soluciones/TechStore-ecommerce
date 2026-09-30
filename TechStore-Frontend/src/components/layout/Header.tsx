@@ -1,123 +1,86 @@
-import React from 'react'
-import { Layout, Avatar, Dropdown, Space, message } from 'antd'
+import React from "react";
+import { Dropdown, message } from "antd";
 import {
-  UserOutlined,
   LogoutOutlined,
-  SettingOutlined,
-} from '@ant-design/icons'
-import type { MenuProps } from 'antd'
-import { useNavigate } from 'react-router-dom'
-import Notifications from '@/components/common/Notifications'
-import { useAuth } from '@/contexts/AuthContext'
-import ThemeToggle from '../common/ThemeToggle'
-
-const { Header: AntHeader } = Layout
+  SearchOutlined,
+  BellOutlined,
+} from "@ant-design/icons";
+import type { MenuProps } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AppHeader: React.FC = () => {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout()
-    message.success('Sesión cerrada exitosamente')
-    navigate('/login')
-  }
+    logout();
+    message.success("Sesión cerrada exitosamente");
+    navigate("/login");
+  };
 
-  const handleProfileClick = () => {
-    // Puedes redirigir a una página de perfil si la tienes
-    message.info('Funcionalidad de perfil en desarrollo')
-  }
-
-  const userMenuItems: MenuProps['items'] = [
+  const userMenuItems: MenuProps["items"] = [
     {
-      type: 'divider',
-    },
-    {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'Cerrar Sesión',
+      label: "Cerrar Sesión",
       danger: true,
       onClick: handleLogout,
     },
-  ]
+  ];
 
-  // Si no hay usuario, no renderizar el header
-  if (!user) {
-    return null
-  }
+  if (!user) return null;
 
-  // Función para obtener iniciales del usuario
   const getUserInitials = () => {
-    if (!user.username) return 'U'
-    const parts = user.username.split(' ')
-    if (parts.length > 1) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    }
-    return user.username.substring(0, 2).toUpperCase()
-  }
-
-  // Función para obtener color del avatar basado en el nombre de usuario
-  const getAvatarColor = (username: string) => {
-    const colors = [
-      '#1890ff', // Azul
-      '#52c41a', // Verde
-      '#faad14', // Amarillo
-      '#f5222d', // Rojo
-      '#722ed1', // Púrpura
-      '#13c2c2', // Cian
-      '#eb2f96', // Rosa
-    ]
-    
-    if (!username) return colors[0]
-    
-    let hash = 0
-    for (let i = 0; i < username.length; i++) {
-      hash = username.charCodeAt(i) + ((hash << 5) - hash)
-    }
-    
-    return colors[Math.abs(hash) % colors.length]
-  }
+    if (!user.username) return "AD";
+    const parts = user.username.split(" ");
+    return parts.length > 1
+      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+      : user.username.substring(0, 2).toUpperCase();
+  };
 
   return (
-    <AntHeader className="bg-card shadow-sm px-6 flex items-center justify-between transition-colors duration-300">
-      <div className="text-lg font-semibold text-primary">
-        TechStore Dashboard
+    <header className="h-16 bg-[#080d19] border-b border-slate-800/80 px-6 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-mono text-cyan-400 tracking-wider hidden sm:inline">
+          TechStore Retail Hub
+        </span>
       </div>
-      
-      <Space size="large">
-        {/* Toggle del tema */}
-        <ThemeToggle />
 
-        {/* Notificaciones */}
-        <Notifications />
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400">
+          <SearchOutlined className="text-slate-500" />
+          <span>Buscar terminal, SKU, clientes...</span>
+          <kbd className="ml-3 px-1.5 py-0.5 text-[10px] bg-slate-800 text-slate-300 rounded border border-slate-700 font-mono">
+            ⌘K
+          </kbd>
+        </div>
 
-        {/* Perfil de usuario */}
+        <button
+          type="button"
+          className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition cursor-pointer"
+        >
+          <BellOutlined />
+        </button>
+
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-          <div className="flex items-center space-x-2 cursor-pointer px-3 py-1 rounded-md hover:bg-hover transition-colors duration-200">
-            <Avatar 
-              size="small" 
-              style={{ 
-                backgroundColor: getAvatarColor(user.username),
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: '12px'
-              }}
-            >
+          <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white text-[11px] font-black">
               {getUserInitials()}
-            </Avatar>
-            <div className="flex flex-col items-start">
-              <span className="text-primary text-sm font-medium">
+            </div>
+            <div className="flex flex-col text-left leading-tight pr-1">
+              <span className="text-xs font-bold text-white capitalize">
                 {user.username}
               </span>
-              <span className="text-muted text-xs">
-                {user.role}
+              <span className="text-[10px] text-cyan-400 font-mono tracking-wider uppercase">
+                {user.role || "ADMIN"}
               </span>
             </div>
           </div>
         </Dropdown>
-      </Space>
-    </AntHeader>
-  )
-}
+      </div>
+    </header>
+  );
+};
 
-export default AppHeader
+export default AppHeader;

@@ -20,7 +20,7 @@ builder.Services.AddControllers()
     {
         // ESTAS 3 CONFIGURACIONES SON CLAVE
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.MaxDepth = 64; // Aumentar profundidad máxima
+        options.JsonSerializerOptions.MaxDepth = 64; // Aumentar profundidad mï¿½xima
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
         // Configuraciones adicionales recomendadas
@@ -29,7 +29,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     }); builder.Services.AddEndpointsApiExplorer();
 
-// Configuración CORS más específica y segura
+// Configuraciï¿½n CORS mï¿½s especï¿½fica y segura
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -39,7 +39,7 @@ builder.Services.AddCors(options =>
                 ?? new[] { "http://localhost:3000", "http://localhost:5173" };
 
             policy
-                .WithOrigins(allowedOrigins) // Especifica los orígenes permitidos
+                .WithOrigins(allowedOrigins) // Especifica los orï¿½genes permitidos
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // IMPORTANTE: Permite credenciales (cookies, auth headers)
@@ -49,7 +49,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSwaggerGen(setup =>
 {
-    // Configurar el esquema de seguridad (Botón Authorize)
+    // Configurar el esquema de seguridad (Botï¿½n Authorize)
     setup.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -57,7 +57,7 @@ builder.Services.AddSwaggerGen(setup =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingrese su token JWT aquí. Ejemplo: eyJhbGciOiJIUz..."
+        Description = "Ingrese su token JWT aquï¿½. Ejemplo: eyJhbGciOiJIUz..."
     });
 
     setup.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -80,7 +80,7 @@ var dbServer = Environment.GetEnvironmentVariable("DB_SERVER") ?? "localhost";
 var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
 
-// Construimos la cadena completa dinámicamente usando DB_SERVER
+// Construimos la cadena completa dinï¿½micamente usando DB_SERVER
 var connectionString = $"Server={dbServer};Database=TechStoreDB;User={dbUser};Password={dbPassword};";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -131,5 +131,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        DbInitializer.Seed(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error al poblar la base de datos.");
+    }
+}
 
 app.Run();

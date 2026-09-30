@@ -1,15 +1,13 @@
-// components/products/ProductTable.tsx
-import React from 'react'
-import { Table, Tag, Button, Space, Popconfirm, message } from 'antd'
-import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
-import { Product } from '@/types/api.types'
-import { useTheme } from '@/contexts/ThemeContext'
+import React from "react";
+import { Table, Popconfirm, message } from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Product } from "@/types/api.types";
 
 interface ProductTableProps {
-  products: Product[]
-  onEdit: (product: Product) => void
-  onDelete: (id: number) => void
-  isLoading?: boolean
+  products: Product[];
+  onEdit: (product: Product) => void;
+  onDelete: (id: number) => void;
+  isLoading?: boolean;
 }
 
 const ProductTable: React.FC<ProductTableProps> = ({
@@ -18,153 +16,191 @@ const ProductTable: React.FC<ProductTableProps> = ({
   onDelete,
   isLoading = false,
 }) => {
-  const { mode } = useTheme()
-
-  // Clases dinámicas basadas en el modo
-  const textPrimary = mode === 'dark' ? 'text-gray-100' : 'text-gray-800'
-  const textSecondary = mode === 'dark' ? 'text-gray-400' : 'text-gray-600'
-  const hoverBg = mode === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-  const lowStockColor = mode === 'dark' ? 'text-red-400' : 'text-red-500'
-  const okStockColor = mode === 'dark' ? 'text-green-400' : 'text-green-500'
-
   const handleDelete = (id: number) => {
-    onDelete(id)
-    message.success('Producto eliminado correctamente')
-  }
+    onDelete(id);
+    message.success("Producto eliminado correctamente");
+  };
 
   const columns = [
     {
-      title: <span className={textSecondary}>ID</span>,
-      dataIndex: 'id',
-      key: 'id',
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
       width: 70,
       sorter: (a: Product, b: Product) => a.id - b.id,
-      render: (id: number) => <span className={textPrimary}>{id}</span>,
+      render: (id: number) => (
+        <span className="text-slate-400 font-mono font-medium">#{id}</span>
+      ),
     },
     {
-      title: <span className={textSecondary}>Código</span>,
-      dataIndex: 'codigo',
-      key: 'codigo',
+      title: "Código",
+      dataIndex: "codigo",
+      key: "codigo",
       render: (codigo: string) => (
-        <Tag color={mode === 'dark' ? 'blue' : 'processing'} className="font-mono">
+        <span className="inline-block px-2.5 py-0.5 rounded-md font-mono text-[11px] font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 shadow-[0_0_10px_rgba(6,182,212,0.15)]">
           {codigo}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: <span className={textSecondary}>Nombre</span>,
-      dataIndex: 'nombre',
-      key: 'nombre',
+      title: "Hardware / Descripción",
+      dataIndex: "nombre",
+      key: "nombre",
       render: (nombre: string, record: Product) => (
-        <div>
-          <div className={`font-medium ${textPrimary}`}>{nombre}</div>
-          <div className={`text-xs ${textSecondary}`}>{record.marca} - {record.modelo || 'Sin modelo'}</div>
+        <div className="py-0.5">
+          <div className="font-semibold text-white tracking-tight">
+            {nombre}
+          </div>
+          <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+            <span className="text-slate-300 font-medium">{record.marca}</span>
+            <span className="text-slate-600">•</span>
+            <span>{record.modelo || "Estándar"}</span>
+          </div>
         </div>
       ),
     },
     {
-      title: <span className={textSecondary}>Categoría</span>,
-      key: 'categoria',
-      render: (_: any, record: Product) => (
-        <Tag color={mode === 'dark' ? 'purple' : 'purple'}>
-          {record.categoria?.nombre || 'Sin categoría'}
-        </Tag>
+      title: "Categoría",
+      key: "categoria",
+      render: (_: unknown, record: Product) => (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
+          {record.categoria?.nombre || "General"}
+        </span>
       ),
     },
     {
-      title: <span className={textSecondary}>Precio</span>,
-      dataIndex: 'precio',
-      key: 'precio',
-      render: (precio: number) => (
-        <div className={textPrimary}>
-          <span className="font-bold">S/. {precio.toFixed(2)}</span>
-        </div>
-      ),
+      title: "Precio Unitario",
+      dataIndex: "precio",
+      key: "precio",
       sorter: (a: Product, b: Product) => a.precio - b.precio,
-    },
-    {
-      title: <span className={textSecondary}>Stock</span>,
-      dataIndex: 'stock',
-      key: 'stock',
-      render: (stock: number, record: Product) => (
-        <div>
-          <Tag 
-            color={stock === 0 ? (mode === 'dark' ? 'red' : 'error') : 
-                   stock < 10 ? (mode === 'dark' ? 'orange' : 'warning') : 
-                   (mode === 'dark' ? 'green' : 'success')}
-            className={`font-bold ${mode === 'dark' ? 'border-gray-600' : ''}`}
-          >
-            {stock} unidades
-          </Tag>
-          {stock < 10 && stock > 0 && (
-            <div className={`text-xs mt-1 ${lowStockColor}`}>
-              ¡Stock bajo!
-            </div>
-          )}
-          {stock === 0 && (
-            <div className={`text-xs mt-1 ${lowStockColor}`}>
-              ¡Agotado!
-            </div>
-          )}
-        </div>
+      render: (precio: number) => (
+        <span className="font-mono font-bold text-emerald-400 text-sm">
+          S/. {Number(precio).toFixed(2)}
+        </span>
       ),
-      sorter: (a: Product, b: Product) => a.stock - b.stock,
     },
     {
-      title: <span className={textSecondary}>Acciones</span>,
-      key: 'actions',
-      width: 120,
-      render: (_: any, record: Product) => (
-        <Space size="small">
-          <Button
-            type="text"
-            icon={<EditOutlined className={mode === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} />}
+      title: "Stock",
+      dataIndex: "stock",
+      key: "stock",
+      sorter: (a: Product, b: Product) => a.stock - b.stock,
+      render: (stock: number) => {
+        const isOutOfStock = stock === 0;
+        const isLow = stock > 0 && stock < 10;
+
+        return (
+          <div className="flex flex-col items-start gap-1">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border ${
+                isOutOfStock
+                  ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                  : isLow
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                    : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isOutOfStock
+                    ? "bg-rose-400"
+                    : isLow
+                      ? "bg-amber-400 animate-pulse"
+                      : "bg-emerald-400"
+                }`}
+              ></span>
+              {stock} unidades
+            </span>
+            {isLow && (
+              <span className="text-[10px] text-amber-400/90 font-medium">
+                ¡Stock bajo!
+              </span>
+            )}
+            {isOutOfStock && (
+              <span className="text-[10px] text-rose-400/90 font-medium">
+                Agotado
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Acciones",
+      key: "actions",
+      width: 100,
+      render: (_: unknown, record: Product) => (
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
             onClick={() => onEdit(record)}
-            size="small"
-          />
+            className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 transition cursor-pointer"
+            title="Editar producto"
+          >
+            <EditOutlined className="text-xs" />
+          </button>
           <Popconfirm
             title="¿Eliminar producto?"
-            description="¿Estás seguro de que deseas eliminar este producto?"
+            description="Esta acción retirará el SKU del inventario."
             onConfirm={() => handleDelete(record.id)}
-            okText="Sí"
-            cancelText="No"
+            okText="Eliminar"
+            cancelText="Cancelar"
             okButtonProps={{
-              danger: true,
-              className: mode === 'dark' ? 'bg-red-600' : '',
+              className:
+                "!bg-rose-600 hover:!bg-rose-500 !text-white !border-none",
             }}
           >
-            <Button
-              type="text"
-              icon={<DeleteOutlined className={mode === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'} />}
-              size="small"
-            />
+            <button
+              type="button"
+              className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-400 hover:border-rose-500/40 transition cursor-pointer"
+              title="Eliminar producto"
+            >
+              <DeleteOutlined className="text-xs" />
+            </button>
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
-  ]
+  ];
 
   return (
-    <Table
-      dataSource={products}
-      columns={columns}
-      rowKey="id"
-      loading={isLoading}
-      pagination={{
-        pageSize: 5,
-        showSizeChanger: true,
-        showQuickJumper: true,
-        showTotal: (total, range) => (
-          <span className={textSecondary}>
-            {range[0]}-{range[1]} de {total} productos
-          </span>
-        ),
-      }}
-      className={`product-table ${mode === 'dark' ? 'dark-table' : ''}`}
-      rowClassName={() => `${hoverBg}`}
-      scroll={{ x: 800 }}
-    />
-  )
-}
+    <div
+      className="bg-[#0f172a]/70 backdrop-blur border border-slate-800/80 rounded-2xl p-4 shadow-lg overflow-hidden
+      [&_.ant-table]:!bg-transparent
+      [&_.ant-table-container]:!bg-transparent
+      [&_.ant-table-thead_.ant-table-cell]:!bg-slate-900/90
+      [&_.ant-table-thead_.ant-table-cell]:!text-slate-400
+      [&_.ant-table-thead_.ant-table-cell]:!border-slate-800
+      [&_.ant-table-tbody_.ant-table-cell]:!border-slate-800/60
+      [&_.ant-table-tbody_.ant-table-row:hover_.ant-table-cell]:!bg-slate-800/40
+      [&_.ant-table-tbody_.ant-table-cell]:!text-slate-200
+      [&_.ant-pagination]:!text-slate-400
+      [&_.ant-pagination-item]:!bg-slate-900
+      [&_.ant-pagination-item]:!border-slate-800
+      [&_.ant-pagination-item_a]:!text-slate-300
+      [&_.ant-pagination-item-active]:!border-cyan-500
+      [&_.ant-pagination-item-active_a]:!text-cyan-400
+      [&_.ant-select-selector]:!bg-slate-900!
+      [&_.ant-select-selector]:!border-slate-800!
+      [&_.ant-select-selection-item]:!text-slate-300"
+    >
+      <Table
+        dataSource={products}
+        columns={columns}
+        rowKey="id"
+        loading={isLoading}
+        pagination={{
+          pageSize: 5,
+          showSizeChanger: true,
+          showTotal: (total, range) => (
+            <span className="text-slate-400 text-xs font-mono">
+              {range[0]}-{range[1]} de {total} hardware SKUs
+            </span>
+          ),
+        }}
+        scroll={{ x: 800 }}
+      />
+    </div>
+  );
+};
 
-export default ProductTable
+export default ProductTable;

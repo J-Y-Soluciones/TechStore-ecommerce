@@ -1,189 +1,197 @@
-import React, { useState } from 'react'
-import { Card, Select, Radio, Space, Empty } from 'antd'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, Bar } from 'recharts'
-import { useTheme } from '@/contexts/ThemeContext'
-
-const { Option } = Select
+import React, { useState } from "react";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Area,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 
 interface TrendData {
-  date: string
-  sales: number
-  revenue: number
-  products: number
-  customers: number
+  date: string;
+  sales: number;
+  revenue: number;
+  products: number;
+  customers: number;
 }
 
 interface TrendChartProps {
-  data: TrendData[]
-  title?: string
-  height?: number
-  showControls?: boolean
-  isLoading?: boolean
+  data: TrendData[];
+  title?: string;
+  height?: number;
+  showControls?: boolean;
+  isLoading?: boolean;
 }
+
+interface TooltipPayloadItem {
+  value?: number;
+  name?: string;
+}
+
+interface CustomTrendTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+  isRevenue: boolean;
+}
+
+const CustomTrendTooltip: React.FC<CustomTrendTooltipProps> = ({
+  active,
+  payload,
+  label,
+  isRevenue,
+}) => {
+  if (active && payload && payload.length) {
+    const val = Number(payload[0]?.value || 0);
+    return (
+      <div className="bg-[#0b1329]/95 backdrop-blur-md border border-slate-700 p-2.5 rounded-xl shadow-xl text-xs">
+        <p className="text-slate-400 font-medium mb-1">{label}</p>
+        <p className="font-bold text-cyan-300 font-mono">
+          {isRevenue
+            ? `S/ ${val.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`
+            : `${val} pedidos`}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const TrendChart: React.FC<TrendChartProps> = ({
   data,
-  title = 'Análisis de Tendencias',
-  height = 300,
-  showControls = true,
+  height = 240,
   isLoading = false,
 }) => {
-  const { mode } = useTheme()
-  const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line')
-  const [metric, setMetric] = useState<'sales' | 'revenue' | 'products' | 'customers'>('sales')
+  const [chartType, setChartType] = useState<"line" | "area" | "bar">("area");
+  const [metric, setMetric] = useState<"sales" | "revenue">("revenue");
 
-  const getMetricConfig = () => {
-    const configs = {
-      sales: { 
-        color: mode === 'dark' ? '#60A5FA' : '#1890ff',
-        name: 'Ventas',
-        unit: ' ventas'
-      },
-      revenue: { 
-        color: mode === 'dark' ? '#34D399' : '#52c41a',
-        name: 'Ingresos',
-        unit: ' S/.'
-      },
-      products: { 
-        color: mode === 'dark' ? '#A78BFA' : '#722ed1',
-        name: 'Productos Vendidos',
-        unit: ' productos'
-      },
-      customers: { 
-        color: mode === 'dark' ? '#FBBF24' : '#faad14',
-        name: 'Clientes',
-        unit: ' clientes'
-      },
-    }
-    return configs[metric]
-  }
+  const isRevenue = metric === "revenue";
+  const primaryColor = isRevenue ? "#06b6d4" : "#818cf8";
 
-  const config = getMetricConfig()
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className={`p-3 rounded-lg shadow-lg ${
-          mode === 'dark' 
-            ? 'bg-gray-800 border border-gray-700' 
-            : 'bg-white border border-gray-200'
-        }`}>
-          <p className={`font-medium ${mode === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
-            {label}
-          </p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="flex items-center">
-              <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }} />
-              {entry.name}: <span className="font-bold ml-1">
-                {entry.value.toLocaleString()}
-                {config.unit}
-              </span>
-            </p>
-          ))}
-        </div>
-      )
-    }
-    return null
-  }
-
-  const renderChart = () => {
-    const commonProps = {
-      dataKey: metric,
-      stroke: config.color,
-      fill: mode === 'dark' ? `${config.color}40` : `${config.color}20`,
-      strokeWidth: 2,
-      activeDot: { 
-        r: 6, 
-        stroke: config.color, 
-        strokeWidth: 2,
-        fill: mode === 'dark' ? '#1F2937' : '#FFFFFF'
-      },
-    }
-
-    switch (chartType) {
-      case 'area':
-        return <Area {...commonProps} />
-      case 'bar':
-        return <Bar {...commonProps} fill={config.color} />
-      default:
-        return <Line {...commonProps} />
-    }
-  }
-
-  // Si no hay datos, mostrar estado vacío
-  if (data.length === 0 && !isLoading) {
+  if (isLoading || data.length === 0) {
     return (
-      <Card 
-        title={title}
-        className={mode === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+      <div
+        style={{ height }}
+        className="flex items-center justify-center text-slate-500 text-xs font-medium"
       >
-        <Empty 
-          description="No hay datos de tendencias disponibles"
-          className="py-8"
-          imageStyle={{ 
-            height: 80,
-            opacity: mode === 'dark' ? 0.3 : 0.5
-          }}
-        />
-      </Card>
-    )
+        No hay datos de tendencias disponibles
+      </div>
+    );
   }
+
+  // Formateador limpio para el eje vertical
+  const formatYAxis = (val: number) => {
+    if (!isRevenue) return val.toString();
+    if (val >= 1000) return `S/ ${(val / 1000).toFixed(0)}k`;
+    return `S/ ${val}`;
+  };
 
   return (
-    <Card 
-      title={title}
-      className={mode === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
-      extra={
-        showControls && (
-          <Space>
-            <Radio.Group value={chartType} onChange={e => setChartType(e.target.value)} size="small">
-              <Radio.Button value="line">Línea</Radio.Button>
-              <Radio.Button value="area">Área</Radio.Button>
-              <Radio.Button value="bar">Barras</Radio.Button>
-            </Radio.Group>
-            
-            <Select 
-              value={metric} 
-              onChange={setMetric} 
-              size="small"
-              className="w-40"
-              dropdownClassName={mode === 'dark' ? 'bg-gray-800' : ''}
+    <div className="w-full flex flex-col justify-between">
+      {/* Controles de Vista */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-lg p-0.5">
+          {(["line", "area", "bar"] as const).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setChartType(type)}
+              className={`px-2.5 py-1 text-[11px] font-medium rounded-md capitalize transition cursor-pointer ${
+                chartType === type
+                  ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
-              <Option value="sales">Ventas</Option>
-              <Option value="revenue">Ingresos</Option>
-              <Option value="products">Productos</Option>
-              <Option value="customers">Clientes</Option>
-            </Select>
-          </Space>
-        )
-      }
-      loading={isLoading}
-    >
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={data}>
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke={mode === 'dark' ? '#374151' : '#e5e7eb'}
-            vertical={false}
-          />
-          <XAxis 
-            dataKey="date" 
-            stroke={mode === 'dark' ? '#9CA3AF' : '#6B7280'}
-            tick={{ fill: mode === 'dark' ? '#9CA3AF' : '#6B7280' }}
-            axisLine={{ stroke: mode === 'dark' ? '#374151' : '#e5e7eb' }}
-          />
-          <YAxis 
-            stroke={mode === 'dark' ? '#9CA3AF' : '#6B7280'}
-            tick={{ fill: mode === 'dark' ? '#9CA3AF' : '#6B7280' }}
-            axisLine={{ stroke: mode === 'dark' ? '#374151' : '#e5e7eb' }}
-            tickFormatter={(value) => value.toLocaleString()}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          {renderChart()}
-        </LineChart>
-      </ResponsiveContainer>
-    </Card>
-  )
-}
+              {type === "line" ? "Línea" : type === "area" ? "Área" : "Barras"}
+            </button>
+          ))}
+        </div>
 
-export default TrendChart
+        <select
+          value={metric}
+          onChange={(e) => setMetric(e.target.value as "sales" | "revenue")}
+          className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-cyan-500 cursor-pointer"
+        >
+          <option value="revenue" className="bg-slate-900 text-white">
+            Ingresos (S/.)
+          </option>
+          <option value="sales" className="bg-slate-900 text-white">
+            Ventas
+          </option>
+        </select>
+      </div>
+
+      {/* Gráfico Recharts con ComposedChart */}
+      <div style={{ height }} className="w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            data={data}
+            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={primaryColor} stopOpacity={0.45} />
+                <stop offset="95%" stopColor={primaryColor} stopOpacity={0.0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#1e293b"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="date"
+              tick={{ fill: "#64748b", fontSize: 10 }}
+              axisLine={{ stroke: "#334155" }}
+              tickLine={false}
+            />
+            <YAxis
+              width={55}
+              tick={{ fill: "#64748b", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={formatYAxis}
+            />
+            <Tooltip content={<CustomTrendTooltip isRevenue={isRevenue} />} />
+
+            {chartType === "area" && (
+              <Area
+                type="monotone"
+                dataKey={metric}
+                stroke={primaryColor}
+                strokeWidth={2}
+                fill="url(#trendGradient)"
+              />
+            )}
+
+            {chartType === "bar" && (
+              <Bar
+                dataKey={metric}
+                fill={primaryColor}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={28}
+              />
+            )}
+
+            {chartType === "line" && (
+              <Line
+                type="monotone"
+                dataKey={metric}
+                stroke={primaryColor}
+                strokeWidth={2}
+                dot={{ r: 3, fill: primaryColor }}
+                activeDot={{ r: 5 }}
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+export default TrendChart;
