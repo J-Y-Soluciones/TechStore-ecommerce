@@ -144,12 +144,14 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        // Asegura que las tablas (Users, Products, etc.) se creen en TiDB si no existen
+        context.Database.EnsureCreated();
         DbInitializer.Seed(context);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error al poblar la base de datos.");
+        logger.LogError(ex, "Error al inicializar y poblar la base de datos.");
     }
 }
 
